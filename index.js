@@ -2,7 +2,7 @@
 const express = require('express');
 const path = require('path');
 const upload = require('./upload');
-// const resize = require('./resize');
+const resize = require('./resize');
 
 const app = express();
 
