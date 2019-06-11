@@ -1,49 +1,29 @@
+// index.js
 const express = require('express');
 const path = require('path');
-const multer = require('multer');
-const uuidv4 = require('uuid/v4');
+const upload = require('./upload');
+// const resize = require('./resize');
 
 const app = express();
 
 // Serve static files from public directory
 app.use(express.static('public'));
 
-// Upload images to /images directory
-const storage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    callback(null, './images');
-  },
-  filename: (req, file, callback) => {
-    callback(null, file.fieldname + '-' + Date.now())
-  }
-});
-
-const upload = multer(
-    {storage},
-    {
-        limits: {  // can set error handling here
-            fieldNameSize: 20,
-            files: 2,
-            fields: 5
-        }
-    }
-    ).single('photo');
-
 app.get('/', (req, res) => {
     res.render('index.hml');
 })
 
 
-app.post('/image', (req, res) => {
+app.post('/image', upload.single('image'), async function(req, res) {
     // submit an image for processing
     // return an id that can be used for later retrieval
-    // let id = uuidv4();
-    upload(req, res, (err) => {
-        if(err) {
-            return res.end("Error uploading file");
-        }
-        res.end("File is uploaded");
-    })
+    const imagePath = path.join(__dirname, '/public/images');
+    const fileUpload = new Resize(imagePath);
+    if (!req.file) {
+      res.status(401).json({error: 'Please provide an image'});
+    }
+    const filename = await fileUpload.save(req.file.buffer);
+    return res.status(200).json({ name: filename });
 });
 
 // app.get(`/image/${imageID}/thumbnail`, (req, res) => {
